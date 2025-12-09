@@ -1,0 +1,152 @@
+# SERVER CONFIGURATION
+server:
+  port: 8080
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: on_param
+    include-exception: false
+
+# SPRING CONFIGURATION
+spring:
+  application:
+    name: movie-booking
+  sql:
+    init:
+      mode: always
+  # DATABASE CONFIGURATION
+  datasource:
+    url: jdbc:mysql://localhost:3306/movie_booking
+    username: root
+    password: 123456789
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  # JPA/HIBERNATE CONFIGURATION
+  jpa:
+    defer-datasource-initialization: true
+    hibernate:
+      ddl-auto: update
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        use_sql_comments: true
+        jdbc:
+          batch_size: 20
+          fetch_size: 50
+        order_inserts: true
+        order_updates: true
+
+  #Mail config
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: dohoan25112004@gmail.com
+    password: dxbu jqon lyrt tckw
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  # JACKSON CONFIGURATION
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    time-zone: Asia/Ho_Chi_Minh
+    default-property-inclusion: non_null
+
+  # MULTIPART FILE UPLOAD
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 20MB
+      max-request-size: 20MB
+
+  #Redis config
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+# CORS CONFIGURATION
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+  allowed-methods: GET,POST,PUT,PATCH,DELETE,OPTIONS
+  allowed-headers: "*"
+  allow-credentials: true
+
+# JWT CONFIGURATION
+jwt:
+  expiryMinutes: 5
+  expiryDay: 14
+  accessKey: p1zs6HE4bebUL6aVjJhSEtj/Bp4rhQPK3vUR2gpcA06muNhYO77Z9kzb3U5sDXBkdpEZwECJfm0tNuDRiVu29g==
+  access-token-expiry-minutes: 30 #minutes
+  refresh-token-expiry-days: 1  #days
+
+otp:
+  ttl-minutes: 5              # Thời gian sống của OTP (phút)
+  resend-limit-seconds: 60    # Thời gian giữa 2 lần gửi lại OTP (giây)
+  count-ttl-hours: 24         # Thời gian reset đếm số lần gửi (giờ)
+  max-send-per-day: 5         # Giới hạn gửi OTP tối đa mỗi ngày
+#Config OpenAPI DOCUMENTATION
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    url: /v3/api-docs/movie-booking-system
+openapi:
+  service:
+    api-docs: movie-booking-system
+    server: http://localhost:${server.port}
+    title: Movie Booking System
+    version: 1.0.0
+
+
+# LOGGING CONFIGURATION
+logging:
+  level:
+    root: INFO
+    com.trainning.movie_booking_system: DEBUG
+    org.springframework.security: INFO
+    org.springframework.web: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %highlight(%-5level){ERROR=red, WARN=yellow, INFO=green, DEBUG=blue, TRACE=magenta} %cyan(%logger{36}) - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+  logback:
+    rollingpolicy:
+      clean-history-on-start: true
+
+# MANAGEMENT & ACTUATOR (Optional)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
+vnpay:
+  tmnCode: ANBB2CT1
+  hashSecret: HV8WLKRENFNZP2ECO14M02RS4HM7E5KN
+  payUrl: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+  
+  # RETURN URL Configuration:
+  # - LOCAL TESTING (no frontend): http://localhost:8080/api/v1/payments/vnpay/callback
+  #   → VNPay redirects directly to backend, returns JSON
+  # - PRODUCTION (with frontend): https://yourfrontend.com/payment/result
+  #   → VNPay redirects to frontend, frontend calls /api/v1/payments/vnpay/verify with params
+  returnUrl: http://localhost:8080/api/v1/payments/vnpay/callback
+  
+  # IPN URL (webhook for async notification - optional)
+  ipnUrl: http://localhost:8080/api/v1/payments/webhook

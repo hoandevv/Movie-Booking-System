@@ -1,0 +1,30 @@
+version: '3.8'
+services:
+  redis:
+    image: redis:latest
+    container_name: redis-server-movie_bocking-system
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - demo-system
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: redis-ui-demo-system
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    networks:
+      - demo-system
+
+volumes:
+  redis_data:
+
+networks:
+  demo-system:
+    driver: bridge

@@ -1,0 +1,1162 @@
+{
+	"info": {
+		"_postman_id": "movie-booking-v1-2025",
+		"name": "Movie Booking System API v1",
+		"description": "Complete API collection for Movie Booking System with proper REST conventions\n\n**Features:**\n- API Versioning (/v1)\n- Public vs Private endpoints\n- Authentication with JWT\n- VNPay payment integration\n- Voucher system\n\n**Base URL:** `{{baseUrl}}/api/v1`\n\n**Author:** GitHub Copilot\n**Date:** 2025-11-11",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{accessToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"item": [
+		{
+			"name": "🔐 Authentication",
+			"item": [
+				{
+					"name": "Register",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has success field\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('success');",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"testuser\",\n  \"email\": \"testuser@example.com\",\n  \"password\": \"Password123!\",\n  \"firstName\": \"Test\",\n  \"lastName\": \"User\",\n  \"phoneNumber\": \"0123456789\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/register",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "auth", "register"]
+						},
+						"description": "Register a new user account. OTP will be sent to email for activation."
+					}
+				},
+				{
+					"name": "Activate Account",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"testuser@example.com\",\n  \"otp\": \"123456\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/activate",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "auth", "activate"]
+						}
+					}
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Save access token\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.success && jsonData.data) {",
+									"        pm.environment.set(\"accessToken\", jsonData.data.accessToken);",
+									"        pm.environment.set(\"refreshToken\", jsonData.data.refreshToken);",
+									"        console.log(\"Access token saved:\", jsonData.data.accessToken);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"Password123!\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "auth", "login"]
+						}
+					}
+				},
+				{
+					"name": "Get Current User",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/me",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "auth", "me"]
+						},
+						"description": "Get current authenticated user info"
+					}
+				},
+				{
+					"name": "Refresh Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Update access token\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.success && jsonData.data) {",
+									"        pm.environment.set(\"accessToken\", jsonData.data.accessToken);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/refresh-token",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "auth", "refresh-token"]
+						}
+					}
+				},
+				{
+					"name": "Forgot Password",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"testuser@example.com\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/forgot-password",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "auth", "forgot-password"]
+						}
+					}
+				},
+				{
+					"name": "Reset Password",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"testuser@example.com\",\n  \"otp\": \"123456\",\n  \"newPassword\": \"NewPassword123!\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/reset-password",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "auth", "reset-password"]
+						}
+					}
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/logout",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "auth", "logout"]
+						}
+					}
+				}
+			],
+			"description": "Authentication endpoints - Register, Login, Logout, Password management"
+		},
+		{
+			"name": "🎬 Movies (Public)",
+			"item": [
+				{
+					"name": "Get All Movies",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/movies?pageNumber=0&pageSize=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "movies"],
+							"query": [
+								{
+									"key": "pageNumber",
+									"value": "0"
+								},
+								{
+									"key": "pageSize",
+									"value": "10"
+								}
+							]
+						},
+						"description": "PUBLIC - Get paginated list of movies"
+					}
+				},
+				{
+					"name": "Get Movie by ID",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/movies/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "movies", "1"]
+						},
+						"description": "PUBLIC - Get movie details by ID"
+					}
+				},
+				{
+					"name": "Search Movies",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/movies/search?keyword=avengers&page=0&size=12&sortBy=releaseDate&direction=DESC",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "movies", "search"],
+							"query": [
+								{
+									"key": "keyword",
+									"value": "avengers"
+								},
+								{
+									"key": "genres",
+									"value": "Action,Sci-Fi",
+									"disabled": true
+								},
+								{
+									"key": "language",
+									"value": "English",
+									"disabled": true
+								},
+								{
+									"key": "status",
+									"value": "SHOWING",
+									"disabled": true
+								},
+								{
+									"key": "ratingMin",
+									"value": "7.0",
+									"disabled": true
+								},
+								{
+									"key": "ratingMax",
+									"value": "10.0",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "12"
+								},
+								{
+									"key": "sortBy",
+									"value": "releaseDate"
+								},
+								{
+									"key": "direction",
+									"value": "DESC"
+								}
+							]
+						},
+						"description": "PUBLIC - Search movies with filters"
+					}
+				},
+				{
+					"name": "[ADMIN] Create Movie",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Avengers: Endgame\",\n  \"description\": \"After the devastating events...\",\n  \"duration\": 181,\n  \"language\": \"English\",\n  \"releaseDate\": \"2025-12-01\",\n  \"rating\": 8.4,\n  \"genres\": [\"Action\", \"Adventure\", \"Sci-Fi\"],\n  \"director\": \"Anthony Russo\",\n  \"cast\": [\"Robert Downey Jr.\", \"Chris Evans\"],\n  \"posterUrl\": \"https://example.com/poster.jpg\",\n  \"trailerUrl\": \"https://youtube.com/watch?v=xxx\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/movies",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "movies"]
+						},
+						"description": "ADMIN ONLY - Create new movie"
+					}
+				},
+				{
+					"name": "[ADMIN] Update Movie",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Avengers: Endgame (Updated)\",\n  \"rating\": 8.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/movies/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "movies", "1"]
+						}
+					}
+				},
+				{
+					"name": "[ADMIN] Delete Movie",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/movies/1?movieStatus=INACTIVE",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "movies", "1"],
+							"query": [
+								{
+									"key": "movieStatus",
+									"value": "INACTIVE"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "🏛️ Theaters (Public)",
+			"item": [
+				{
+					"name": "Get All Theaters",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/theaters?pageNumber=0&pageSize=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "theaters"],
+							"query": [
+								{
+									"key": "pageNumber",
+									"value": "0"
+								},
+								{
+									"key": "pageSize",
+									"value": "10"
+								}
+							]
+						},
+						"description": "PUBLIC - Get list of theaters"
+					}
+				},
+				{
+					"name": "Get Theater by ID",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/theaters/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "theaters", "1"]
+						}
+					}
+				},
+				{
+					"name": "Get Movies by Theater",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/theaters/1/movies?date=2025-11-11",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "theaters", "1", "movies"],
+							"query": [
+								{
+									"key": "date",
+									"value": "2025-11-11"
+								}
+							]
+						},
+						"description": "PUBLIC - Get movies showing at a theater on a specific date"
+					}
+				},
+				{
+					"name": "[ADMIN] Create Theater",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"CGV Vincom Center\",\n  \"address\": \"191 Ba Tháng Hai, Quận 10, TPHCM\",\n  \"city\": \"Ho Chi Minh\",\n  \"phoneNumber\": \"0281234567\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/theaters",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "theaters"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "📅 Showtimes (Public)",
+			"item": [
+				{
+					"name": "Get All Showtimes",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/showtimes?pageNumber=0&pageSize=20",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "showtimes"],
+							"query": [
+								{
+									"key": "pageNumber",
+									"value": "0"
+								},
+								{
+									"key": "pageSize",
+									"value": "20"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Filter Showtimes by Theater & Movie",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/showtimes?theaterId=1&movieId=2&date=2025-11-11",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "showtimes"],
+							"query": [
+								{
+									"key": "theaterId",
+									"value": "1"
+								},
+								{
+									"key": "movieId",
+									"value": "2"
+								},
+								{
+									"key": "date",
+									"value": "2025-11-11"
+								}
+							]
+						},
+						"description": "PUBLIC - Filter showtimes by theater, movie, and date"
+					}
+				},
+				{
+					"name": "Get Showtime by ID",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/showtimes/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "showtimes", "1"]
+						}
+					}
+				},
+				{
+					"name": "[ADMIN] Create Showtime",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"movieId\": 1,\n  \"screenId\": 1,\n  \"startTime\": \"2025-11-11T19:00:00\",\n  \"endTime\": \"2025-11-11T21:30:00\",\n  \"price\": 100000\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/showtimes",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "showtimes"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "🪑 Seats & Screens (Public Read)",
+			"item": [
+				{
+					"name": "Get Seats by Screen",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/seats/screen/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "seats", "screen", "1"]
+						},
+						"description": "PUBLIC - View seat layout for a screen"
+					}
+				},
+				{
+					"name": "Get Screen by ID",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/screens/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "screens", "1"]
+						}
+					}
+				},
+				{
+					"name": "[ADMIN] Generate Seats for Screen",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"rows\": 10,\n  \"seatsPerRow\": 15,\n  \"vipRows\": [5, 6, 7],\n  \"standardPrice\": 100000,\n  \"vipPrice\": 150000\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/seats/generate/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "seats", "generate", "1"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "🔒 Seat Holds (Private)",
+			"item": [
+				{
+					"name": "Hold Seats",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Save showtime and seat IDs for later use",
+									"pm.environment.set(\"showtimeId\", 1);",
+									"pm.environment.set(\"seatIds\", \"[1, 2, 3]\");"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"showtimeId\": {{showtimeId}},\n  \"seatIds\": [1, 2, 3],\n  \"ttlSec\": 120\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/seat-holds",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "seat-holds"]
+						},
+						"description": "PRIVATE - Hold seats temporarily (120 seconds default)"
+					}
+				},
+				{
+					"name": "Release Seats",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"showtimeId\": {{showtimeId}},\n  \"seatIds\": [1, 2, 3]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/seat-holds",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "seat-holds"]
+						},
+						"description": "PRIVATE - Release held seats manually"
+					}
+				}
+			]
+		},
+		{
+			"name": "🎫 Bookings (Private)",
+			"item": [
+				{
+					"name": "Create Booking",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Save booking ID\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.success && jsonData.data) {",
+									"        pm.environment.set(\"bookingId\", jsonData.data.id);",
+									"        console.log(\"Booking ID saved:\", jsonData.data.id);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"showtimeId\": {{showtimeId}},\n  \"seatIds\": [1, 2, 3],\n  \"voucherCode\": \"WELCOME10\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/bookings",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "bookings"]
+						},
+						"description": "PRIVATE - Create a new booking. Status: PENDING_PAYMENT"
+					}
+				},
+				{
+					"name": "Get My Bookings",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/bookings?pageNumber=0&pageSize=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "bookings"],
+							"query": [
+								{
+									"key": "pageNumber",
+									"value": "0"
+								},
+								{
+									"key": "pageSize",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Booking by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/bookings/{{bookingId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "bookings", "{{bookingId}}"]
+						}
+					}
+				},
+				{
+					"name": "Cancel Booking",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/bookings/{{bookingId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "bookings", "{{bookingId}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "💳 Payments (Private)",
+			"item": [
+				{
+					"name": "Create Payment URL",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Save payment URL\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.success && jsonData.data) {",
+									"        pm.environment.set(\"paymentUrl\", jsonData.data);",
+									"        console.log(\"Payment URL:\", jsonData.data);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/payments/bookings/{{bookingId}}/payment",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "payments", "bookings", "{{bookingId}}", "payment"]
+						},
+						"description": "PRIVATE - Generate VNPay payment URL. User will be redirected to payment gateway."
+					}
+				},
+				{
+					"name": "Check Payment Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/payments/bookings/{{bookingId}}/payment-status",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "payments", "bookings", "{{bookingId}}", "payment-status"]
+						},
+						"description": "PRIVATE - Check payment status for a booking"
+					}
+				},
+				{
+					"name": "Verify VNPay Payment (Frontend)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"vnp_Amount\": \"10000000\",\n  \"vnp_BankCode\": \"NCB\",\n  \"vnp_CardType\": \"ATM\",\n  \"vnp_OrderInfo\": \"Thanh toan ve phim\",\n  \"vnp_PayDate\": \"20251111193045\",\n  \"vnp_ResponseCode\": \"00\",\n  \"vnp_TmnCode\": \"ANBB2CT1\",\n  \"vnp_TransactionNo\": \"14324567\",\n  \"vnp_TxnRef\": \"BOOKING-123\",\n  \"vnp_SecureHash\": \"abc123...\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/payments/vnpay/verify",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "payments", "vnpay", "verify"]
+						},
+						"description": "PRIVATE - Frontend calls this after receiving VNPay redirect"
+					}
+				},
+				{
+					"name": "Cancel Payment",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/payments/bookings/{{bookingId}}/payment",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "payments", "bookings", "{{bookingId}}", "payment"]
+						},
+						"description": "PRIVATE - Cancel payment and release seats"
+					}
+				},
+				{
+					"name": "[WEBHOOK] VNPay Callback",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/payments/vnpay/callback?vnp_Amount=10000000&vnp_ResponseCode=00&vnp_TxnRef=BOOKING-123&vnp_SecureHash=abc123",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "payments", "vnpay", "callback"],
+							"query": [
+								{
+									"key": "vnp_Amount",
+									"value": "10000000"
+								},
+								{
+									"key": "vnp_ResponseCode",
+									"value": "00"
+								},
+								{
+									"key": "vnp_TxnRef",
+									"value": "BOOKING-123"
+								},
+								{
+									"key": "vnp_SecureHash",
+									"value": "abc123"
+								}
+							]
+						},
+						"description": "PUBLIC (verified by signature) - VNPay redirects here after payment"
+					}
+				}
+			]
+		},
+		{
+			"name": "🎟️ Vouchers",
+			"item": [
+				{
+					"name": "Get Public Vouchers",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/vouchers?page=0&size=10&sortBy=validUntil&sortDir=ASC",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "vouchers"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								},
+								{
+									"key": "sortBy",
+									"value": "validUntil"
+								},
+								{
+									"key": "sortDir",
+									"value": "ASC"
+								}
+							]
+						},
+						"description": "PUBLIC - Get all available public vouchers"
+					}
+				},
+				{
+					"name": "Validate Voucher",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"voucherCode\": \"WELCOME10\",\n  \"totalAmount\": 500000\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/vouchers/validate",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "vouchers", "validate"]
+						},
+						"description": "PRIVATE - Validate if voucher can be applied"
+					}
+				},
+				{
+					"name": "Get My Voucher Usage",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/vouchers/usages/me?page=0&size=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "vouchers", "usages", "me"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								}
+							]
+						},
+						"description": "PRIVATE - Get user's voucher usage history"
+					}
+				},
+				{
+					"name": "[ADMIN] Create Voucher",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"code\": \"WELCOME10\",\n  \"description\": \"10% discount for new users\",\n  \"discountType\": \"PERCENTAGE\",\n  \"discountValue\": 10,\n  \"maxDiscount\": 100000,\n  \"minPurchase\": 200000,\n  \"validFrom\": \"2025-11-01T00:00:00\",\n  \"validUntil\": \"2025-12-31T23:59:59\",\n  \"usageLimit\": 100,\n  \"userUsageLimit\": 1,\n  \"isPublic\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/vouchers/admin",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "vouchers", "admin"]
+						},
+						"description": "ADMIN ONLY - Create new voucher"
+					}
+				},
+				{
+					"name": "[ADMIN] Get All Vouchers",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/vouchers/admin?page=0&size=20&sortBy=createdAt&sortDir=DESC",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "vouchers", "admin"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								},
+								{
+									"key": "sortBy",
+									"value": "createdAt"
+								},
+								{
+									"key": "sortDir",
+									"value": "DESC"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "[ADMIN] Get Voucher by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/vouchers/admin/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "vouchers", "admin", "1"]
+						}
+					}
+				},
+				{
+					"name": "[ADMIN] Update Voucher",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"description\": \"15% discount for new users (updated)\",\n  \"discountValue\": 15\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/vouchers/admin/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "vouchers", "admin", "1"]
+						}
+					}
+				},
+				{
+					"name": "[ADMIN] Delete Voucher",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/vouchers/admin/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "vouchers", "admin", "1"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "📧 OTP",
+			"item": [
+				{
+					"name": "Send OTP",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"testuser@example.com\",\n  \"type\": \"REGISTRATION\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/otp/send",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "otp", "send"]
+						},
+						"description": "PUBLIC - Send/Resend OTP to email"
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		}
+	]
+}
