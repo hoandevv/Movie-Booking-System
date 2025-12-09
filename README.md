@@ -796,13 +796,6 @@ This project is licensed under the MIT License.
 
 ## 👨‍💻 Author
 https://github.com/hoandevv
-
----
-
-## 📞 Support
-
-Nếu gặp vấn đề, vui lòng tạo issue tại: [GitHub Issues](https://github.com/hoangdinhdung05/Backend-Movie-Booking-System/issues)
-
 ---
 
 **⚡️ Next Steps:**
