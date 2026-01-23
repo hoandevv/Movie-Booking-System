@@ -25,7 +25,7 @@
 | # | Document | Description |
 |---|----------|-------------|
 | 1 | [Setup Guide](docs/01-SETUP-GUIDE.md) | 🚀 Cài đặt & chạy dự án |
-| 2 | [API Documentation](docs/02-API-DOCUMENTATION.md) | 📡 REST API endpoints *(Coming soon)* |
+| 2 | [API Documentation](docs/02-API-DOCUMENTATION.md) | 📡 REST API endpoints |
 | 3 | [Authentication](docs/03-AUTHENTICATION.md) | 🔐 JWT authentication guide |
 | 4 | [Booking Flow](docs/04-BOOKING-FLOW.md) | 🎫 **Booking flow (FIXED)** |
 | 5 | [Payment Flow](docs/05-PAYMENT-FLOW.md) | 💳 **Payment flow (FIXED)** |
