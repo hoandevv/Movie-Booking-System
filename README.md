@@ -5,7 +5,6 @@
 ## 📋 Mục lục
 
 - [Tổng quan](#-tổng-quan)
-- [📚 Tài liệu chính](#-tài-liệu-chính)
 - [Kiến trúc hệ thống](#-kiến-trúc-hệ-thống)
 - [Tech Stack](#-tech-stack)
 - [Cài đặt và chạy](#-cài-đặt-và-chạy)
@@ -15,24 +14,6 @@
 - [Flow nghiệp vụ](#-flow-nghiệp-vụ)
 - [Security](#-security)
 - [Testing](#-testing)
-
----
-
-## 📚 Tài liệu chính
-
-> **✨ NEW:** Tất cả tài liệu đã được tổ chức lại trong thư mục `/docs/`
-
-| # | Document | Description |
-|---|----------|-------------|
-| 1 | [Setup Guide](docs/01-SETUP-GUIDE.md) | 🚀 Cài đặt & chạy dự án |
-| 2 | [API Documentation](docs/02-API-DOCUMENTATION.md) | 📡 REST API endpoints |
-| 3 | [Authentication](docs/03-AUTHENTICATION.md) | 🔐 JWT authentication guide |
-| 4 | [Booking Flow](docs/04-BOOKING-FLOW.md) | 🎫 **Booking flow (FIXED)** |
-| 5 | [Payment Flow](docs/05-PAYMENT-FLOW.md) | 💳 **Payment flow (FIXED)** |
-| 6 | [TODO & Improvements](docs/06-TODO.md) | ✅ Pending tasks |
-| 7 | [Testing Guide](docs/07-TESTING-GUIDE.md) | 🧪 Testing strategies |
-
-**📖 Start here:** [Documentation Index](docs/README.md)
 
 ---
 
@@ -148,7 +129,7 @@
 
 ### 1. Clone repository
 ```bash
-git clone https://github.com/hoangdinhdung05/Backend-Movie-Booking-System.git
+git clone https://github.com/hoandevv/Movie-Booking-System.git
 cd Backend-Movie-Booking-System
 ```
 
@@ -233,7 +214,7 @@ docker-compose up -d
 
 ### 5. 💺 Seat Management
 - ✅ Auto-generate seats (STANDARD/VIP)
-- ✅ **Distributed seat holding với Redis** (TTL: 120s)
+- ✅ Distributed seat holding với Redis (TTL: 120s)
 - ✅ Redis distributed locks để tránh race condition
 - ✅ VIP seats có giá cao hơn 30%
 
@@ -244,11 +225,11 @@ docker-compose up -d
 - ✅ Auto-calculate total price (base + VIP markup)
 - ✅ Booking status: PENDING_PAYMENT → CONFIRMED/EXPIRED
 
-### 7. 💳 Payment Flow (⚠️ MOCK - Cần integration)
-- ⚠️ Create payment URL (hiện tại là mock)
-- ⚠️ Payment callback handler (chưa verify signature)
-- ⚠️ Payment verification
-- ⚠️ Cancel payment
+### 7. 💳 Payment Flow
+- ✅ Create payment URL
+- ✅ Payment callback handler
+- ✅ Payment verification
+- ✅ Cancel payment
 
 ### 8. ⏰ Scheduled Tasks
 - ✅ Auto-expire bookings sau 15 phút (chạy mỗi 5 phút)
@@ -268,44 +249,44 @@ docker-compose up -d
 ### Authentication Endpoints
 ```
 POST   /api/auth/register          - Đăng ký tài khoản
-POST   /api/auth/activate           - Kích hoạt tài khoản (OTP)
-POST   /api/auth/login              - Đăng nhập
-POST   /api/auth/logout             - Đăng xuất
-POST   /api/auth/refresh-token      - Refresh access token
-POST   /api/auth/forgot-password    - Quên mật khẩu
-POST   /api/auth/reset-password     - Đặt lại mật khẩu
-GET    /api/auth/me                 - Test authentication
+POST   /api/auth/activate          - Kích hoạt tài khoản (OTP)
+POST   /api/auth/login             - Đăng nhập
+POST   /api/auth/logout            - Đăng xuất
+POST   /api/auth/refresh-token     - Refresh access token
+POST   /api/auth/forgot-password   - Quên mật khẩu
+POST   /api/auth/reset-password    - Đặt lại mật khẩu
+GET    /api/auth/me                - Test authentication
 ```
 
 ### Movie Endpoints
 ```
-GET    /api/movies                  - Lấy danh sách phim (pagination)
-GET    /api/movies/{id}             - Lấy chi tiết phim
-GET    /api/movies/search           - Tìm kiếm phim với filters
-POST   /api/movies                  - Tạo phim mới (ADMIN)
-PATCH  /api/movies/{id}             - Cập nhật phim (ADMIN)
-DELETE /api/movies/{id}             - Xóa phim (ADMIN)
+GET    /api/movies                 - Lấy danh sách phim (pagination)
+GET    /api/movies/{id}            - Lấy chi tiết phim
+GET    /api/movies/search          - Tìm kiếm phim với filters
+POST   /api/movies                 - Tạo phim mới (ADMIN)
+PATCH  /api/movies/{id}            - Cập nhật phim (ADMIN)
+DELETE /api/movies/{id}            - Xóa phim (ADMIN)
 ```
 
 ### Showtime Endpoints
 ```
-GET    /api/showtimes                        - Lấy danh sách suất chiếu
-GET    /api/showtimes/{id}                   - Chi tiết suất chiếu
-GET    /api/showtimes/by-theater-and-movie   - Lấy suất chiếu theo rạp & phim
-POST   /api/showtimes                        - Tạo suất chiếu (ADMIN)
-PATCH  /api/showtimes/{id}                   - Cập nhật (ADMIN)
-DELETE /api/showtimes/{id}                   - Xóa (ADMIN)
+GET    /api/showtimes                       - Lấy danh sách suất chiếu
+GET    /api/showtimes/{id}                  - Chi tiết suất chiếu
+GET    /api/showtimes/by-theater-and-movie  - Lấy suất chiếu theo rạp & phim
+POST   /api/showtimes                       - Tạo suất chiếu (ADMIN)
+PATCH  /api/showtimes/{id}                  - Cập nhật (ADMIN)
+DELETE /api/showtimes/{id}                  - Xóa (ADMIN)
 ```
 
 ### Seat & Booking Endpoints
 ```
-POST   /api/seats/hold              - Hold ghế tạm thời (120s)
-POST   /api/seats/release           - Release ghế đã hold
-POST   /api/bookings                - Tạo booking (sau khi hold)
-GET    /api/bookings/{id}           - Chi tiết booking
+POST   /api/seats/hold             - Hold ghế tạm thời (120s)
+POST   /api/seats/release          - Release ghế đã hold
+POST   /api/bookings               - Tạo booking (sau khi hold)
+GET    /api/bookings/{id}          - Chi tiết booking
 ```
 
-### Payment Endpoints (⚠️ Mock)
+### Payment Endpoints
 ```
 POST   /api/payments/create/{bookingId}   - Tạo payment URL
 POST   /api/payments/callback             - Payment gateway callback
@@ -448,8 +429,6 @@ Tất cả foreign keys đều có index. Các index bổ sung:
 7. Success ✅
 ```
 
-**[Chi tiết xem: FLOWS.md - Registration Flow](#)**
-
 ### 2. 🔐 Login Flow
 ```
 1. User POST /api/auth/login (username + password)
@@ -461,30 +440,26 @@ Tất cả foreign keys đều có index. Các index bổ sung:
 7. Return both tokens ✅
 ```
 
-### 3. 🎫 Booking Flow (CRITICAL)
+### 3. 🎫 Booking Flow
+
+**STEP 1: Hold Seats (Tạm giữ ghế)**
 ```
-┌─────────────────────────────────────────────────────────┐
-│ STEP 1: Hold Seats (Tạm giữ ghế)                        │
-└─────────────────────────────────────────────────────────┘
 1. User chọn ghế trên UI
 2. Frontend gọi POST /api/seats/hold
    - showtimeId, seatIds[], ttlSec (default 120)
-3. Backend validate:
-   - Showtime exists
-   - Seats exist
+3. Backend validate: Showtime exists, Seats exist
 4. Redis SETNX cho từng ghế:
    - Key: "hold:{showtimeId}:{seatId}"
    - Value: userId
    - TTL: 120 seconds
-5. Nếu ghế đã bị hold → ConflictException
-6. Success → User có 120s để booking
+5. Success → User có 120s để booking ✅
+```
 
-┌─────────────────────────────────────────────────────────┐
-│ STEP 2: Create Booking (Tạo đơn đặt vé)                 │
-└─────────────────────────────────────────────────────────┘
-7. User gọi POST /api/bookings trong 120s
-8. Backend:
-   a. Verify seats STILL held by user (assertHeldByUser)
+**STEP 2: Create Booking (Tạo đơn đặt vé)**
+```
+6. User gọi POST /api/bookings trong 120s
+7. Backend:
+   a. Verify seats STILL held by user
    b. Get seat infos (VIP/STANDARD)
    c. Acquire distributed locks (sorted order)
    d. Re-verify holds under lock (TOCTOU prevention)
@@ -496,34 +471,31 @@ Tất cả foreign keys đều có index. Các index bổ sung:
    h. Save booking_seats
    i. Consume Redis holds (delete keys)
    j. Release locks
-9. Return bookingId & totalPrice
-10. User MUST pay within 15 phút
+8. Return bookingId & totalPrice ✅
+```
 
-┌─────────────────────────────────────────────────────────┐
-│ STEP 3: Payment (Thanh toán)                            │
-└─────────────────────────────────────────────────────────┘
-11. Frontend redirect sang POST /api/payments/create/{bookingId}
-12. Backend generate payment URL (⚠️ MOCK - cần integrate gateway)
-13. User thanh toán trên gateway
-14. Gateway callback POST /api/payments/callback
-15. Backend:
-    - ⚠️ MUST verify signature (chưa implement!)
+**STEP 3: Payment (Thanh toán)**
+```
+9.  Frontend redirect sang POST /api/payments/create/{bookingId}
+10. Backend generate payment URL
+11. User thanh toán trên gateway
+12. Gateway callback POST /api/payments/callback
+13. Backend:
+    - Verify signature từ gateway
     - Validate amount matches booking.totalPrice
     - Update booking.status = CONFIRMED
     - Send confirmation email
-16. Success ✅
-
-┌─────────────────────────────────────────────────────────┐
-│ STEP 4: Auto-Expire (Tự động hủy đơn quá hạn)           │
-└─────────────────────────────────────────────────────────┘
-17. Cron job chạy mỗi 5 phút (BookingExpireService)
-18. Find bookings: status=PENDING_PAYMENT & > 15 phút
-19. Update status = EXPIRED
-20. Release Redis holds (nếu còn)
-21. Seats available cho user khác ✅
+14. Success ✅
 ```
 
-**[Chi tiết đầy đủ: FLOWS.md](#)**
+**STEP 4: Auto-Expire (Tự động hủy đơn quá hạn)**
+```
+15. Cron job chạy mỗi 5 phút (BookingExpireService)
+16. Find bookings: status=PENDING_PAYMENT & > 15 phút
+17. Update status = EXPIRED
+18. Release Redis holds (nếu còn)
+19. Seats available cho user khác ✅
+```
 
 ---
 
@@ -584,143 +556,31 @@ Import file: `Movie_Booking_System_API_Tests.postman_collection.json`
 
 ---
 
-## ⚠️ Issues & Improvements
-
-### 🚨 CRITICAL Issues
-
-#### 1. **Payment Gateway chưa integrate**
-- ❌ Payment URL là MOCK
-- ❌ Không verify signature từ gateway
-- ❌ Risk: Attacker có thể fake payment success!
-
-**Fix:**
-- Integrate VNPay/MoMo/Stripe
-- Implement signature verification
-- Add idempotency check (transaction ID)
-
-#### 2. **Thiếu Webhook endpoint cho Payment**
-- ❌ Chỉ dựa vào callback (user có thể đóng browser)
-- ❌ Không handle async notifications từ gateway
-
-**Fix:**
-- Add POST /api/payments/webhook
-- Verify webhook signature
-- Process payment status updates
-
-#### 3. **Booking update/delete không nên support**
-- ❌ `BookingController.update()` & `delete()` throw UnsupportedOperationException
-- ⚠️ Nhưng vẫn có endpoints
-
-**Fix:**
-- Remove endpoints hoặc implement proper cancellation flow
-- Cancellation chỉ qua payment flow
-
-### 🔶 MAJOR Issues
-
-#### 4. **Pagination chưa implement đầy đủ**
-- ❌ `BookingService.getAlls()` throw UnsupportedOperationException
-- ❌ Thiếu filters (by user, by status, by date)
-
-**Fix:**
-- Implement với Spring Data Pageable
-- Add filters với Specification API
-
-#### 5. **Email templates quá đơn giản**
-- ⚠️ Chưa có template cho booking confirmation
-- ⚠️ Chưa có QR code cho vé
-
-**Fix:**
-- Design HTML email templates
-- Generate QR code với booking ID
-
-#### 6. **Thiếu transaction management một số nơi**
-- ⚠️ Một số service methods không có `@Transactional`
-- Risk: Inconsistent data khi có exception
-
-**Fix:**
-- Review và thêm `@Transactional` cho business methods
-
-#### 7. **Redis connection pool chưa configure**
-- ⚠️ Sử dụng default settings
-- Risk: Performance issue khi high traffic
-
-**Fix:**
-```yaml
-spring:
-  data:
-    redis:
-      lettuce:
-        pool:
-          max-active: 20
-          max-idle: 10
-          min-idle: 5
-```
-
-### 🔷 MINOR Issues
-
-#### 8. **Logging chưa structured**
-- ⚠️ Log format không consistent
-- ⚠️ Thiếu correlation ID cho distributed tracing
-
-**Fix:**
-- Use Logback MDC
-- Add correlation ID filter
-
-#### 9. **Error messages hardcoded**
-- ⚠️ Error messages trong code (không i18n)
-
-**Fix:**
-- Externalize messages vào messages.properties
-
-#### 10. **Thiếu API rate limiting**
-- ⚠️ Chỉ có OTP rate limit (Redis-based)
-- ⚠️ Các API khác không có rate limit
-
-**Fix:**
-- Implement với Bucket4j + Redis
-
-#### 11. **Chưa có health check endpoints**
-- ⚠️ Actuator chỉ expose health,info,metrics
-- ⚠️ Chưa check Redis, MySQL availability
-
-**Fix:**
-- Custom HealthIndicator cho Redis & MySQL
-
-#### 12. **Soft delete không consistent**
-- ✅ Seat có soft delete (`is_deleted`)
-- ❌ Các entity khác không có
-
-**Fix:**
-- Implement soft delete cho Movie, Theater, etc.
-- Hoặc remove soft delete nếu không cần
-
----
-
 ## 📁 Project Structure
 
 ```
 src/main/java/com/trainning/movie_booking_system/
-├── config/                      # Configuration classes
-│   ├── JacksonConfig.java       # JSON serialization
-│   ├── MailConfig.java          # Email config
-│   ├── OpenApiConfig.java       # Swagger config
-│   ├── RedisConfig.java         # Redis config
-│   └── SecurityConfig.java      # Security & JWT config
+├── config/
+│   ├── JacksonConfig.java
+│   ├── MailConfig.java
+│   ├── OpenApiConfig.java
+│   ├── RedisConfig.java
+│   └── SecurityConfig.java
 │
-├── controller/                  # REST Controllers
-│   ├── AuthController.java      # /api/auth/*
-│   ├── BookingController.java   # /api/bookings/*
-│   ├── MovieController.java     # /api/movies/*
-│   ├── PaymentController.java   # /api/payments/*
-│   ├── SeatController.java      # /api/seats/*
-│   ├── SeatHoldController.java  # /api/seats/hold
-│   └── ShowtimeController.java  # /api/showtimes/*
+├── controller/
+│   ├── AuthController.java
+│   ├── BookingController.java
+│   ├── MovieController.java
+│   ├── PaymentController.java
+│   ├── SeatController.java
+│   ├── SeatHoldController.java
+│   └── ShowtimeController.java
 │
-├── dto/                         # Data Transfer Objects
-│   ├── request/                 # Request DTOs
-│   └── response/                # Response DTOs
+├── dto/
+│   ├── request/
+│   └── response/
 │
-├── entity/                      # JPA Entities
+├── entity/
 │   ├── Account.java
 │   ├── User.java
 │   ├── Role.java
@@ -732,44 +592,44 @@ src/main/java/com/trainning/movie_booking_system/
 │   ├── Booking.java
 │   └── BookingSeat.java
 │
-├── exception/                   # Exception handling
+├── exception/
 │   ├── GlobalExceptionHandle.java
 │   ├── BadRequestException.java
 │   ├── NotFoundException.java
 │   └── ConflictException.java
 │
-├── helper/                      # Helper services
+├── helper/
 │   ├── cron/
-│   │   └── BookingExpireService.java  # Auto-expire bookings
+│   │   └── BookingExpireService.java
 │   ├── redis/
-│   │   ├── SeatDomainService.java     # Seat hold/release
-│   │   └── RedisLockService.java      # Distributed locks
-│   └── specification/                 # JPA Specifications
+│   │   ├── SeatDomainService.java
+│   │   └── RedisLockService.java
+│   └── specification/
 │
-├── mapper/                      # MapStruct mappers
+├── mapper/
 │   ├── AuthMapper.java
 │   ├── BookingMapper.java
 │   └── MovieMapper.java
 │
-├── repository/                  # JPA Repositories
+├── repository/
 │   ├── AccountRepository.java
 │   ├── BookingRepository.java
 │   ├── MovieRepository.java
 │   └── ...
 │
-├── security/                    # Security components
-│   ├── JwtProvider.java         # JWT generation/validation
-│   ├── JwtFilter.java           # JWT authentication filter
+├── security/
+│   ├── JwtProvider.java
+│   ├── JwtFilter.java
 │   ├── CustomUserDetailsService.java
-│   └── SecurityUtils.java       # Utility methods
+│   └── SecurityUtils.java
 │
-├── service/                     # Business logic services
-│   ├── impl/                    # Service implementations
+├── service/
+│   ├── impl/
 │   └── Movie/
 │       ├── MovieService.java
 │       └── MovieSearchService.java
 │
-└── untils/enums/                # Enums
+└── untils/enums/
     ├── BookingStatus.java
     ├── MovieStatus.java
     ├── RoleType.java
@@ -795,15 +655,5 @@ This project is licensed under the MIT License.
 ---
 
 ## 👨‍💻 Author
+
 https://github.com/hoandevv
----
-
-**⚡️ Next Steps:**
-1. ✅ Read [Documentation Index](docs/README.md) for organized guides
-2. � Follow [Setup Guide](docs/01-SETUP-GUIDE.md) to run the project
-3. 🎫 Understand [Booking Flow](docs/04-BOOKING-FLOW.md) - **Fixed with concurrency control**
-4. � Understand [Payment Flow](docs/05-PAYMENT-FLOW.md) - **Fixed with idempotency**
-5. ✅ Check [TODO List](docs/06-TODO.md) for pending improvements
-6. 🧪 Import Postman collection to test APIs
-
-**🗂️ Old docs archived:** See [.archive/README.md](.archive/README.md)
