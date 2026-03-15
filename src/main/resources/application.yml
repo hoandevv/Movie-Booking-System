@@ -137,8 +137,8 @@ management:
       show-details: when-authorized
 
 vnpay:
-  tmnCode: ANBB2CT1
-  hashSecret: HV8WLKRENFNZP2ECO14M02RS4HM7E5KN
+  tmnCode: 2QXU693U
+  hashSecret: G6S2XQ6G6S2XQ6G6S2XQ6G6S2XQ6G6S2
   payUrl: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
   
   # RETURN URL Configuration:

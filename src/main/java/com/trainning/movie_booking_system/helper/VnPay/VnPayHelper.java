@@ -31,7 +31,7 @@ public class VnPayHelper {
         }
     }
 
-    public static String buildQuery(Map<String, String> params) {
+    public static String buildQuery(Map<String, String> params, boolean encode) {
         // sort by key ASC
         List<String> keys = new ArrayList<>(params.keySet());
         Collections.sort(keys);
@@ -39,19 +39,31 @@ public class VnPayHelper {
         for (String k : keys) {
             String v = params.get(k);
             if (v != null && !v.isEmpty()) {
-                sb.append(k).append("=")
-                        .append(URLEncoder.encode(v, StandardCharsets.UTF_8))
-                        .append("&");
+                sb.append(k).append("=");
+                if (encode) {
+                    try {
+                        sb.append(URLEncoder.encode(v, StandardCharsets.UTF_8.toString()).replace("+", "%20"));
+                    } catch (Exception e) {
+                        sb.append(v);
+                    }
+                } else {
+                    sb.append(v);
+                }
+                sb.append("&");
             }
         }
         if (sb.length() > 0) sb.setLength(sb.length() - 1);
         return sb.toString();
     }
 
+    public static String buildQuery(Map<String, String> params) {
+        return buildQuery(params, true);
+    }
+
     public static String secureHash(String hashSecret, Map<String, String> params) {
-        // hash trên chuỗi **chưa** có vnp_SecureHash, đã sort & URL-encode value
-        String data = buildQuery(params);
-        return hmacSHA512(hashSecret, data);
+        // VNPay 2.1.0: Hash on RAW data (no URL encoding)
+        String rawData = buildQuery(params, false);
+        return hmacSHA512(hashSecret, rawData);
     }
 
 }

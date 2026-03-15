@@ -48,6 +48,7 @@ public class BookingServiceImpl implements BookingService {
     private final SeatDomainService seatClient;
 
     @Override
+    @Transactional
     public BookingResponse create(BookingRequest request) {
         log.info("[BOOKING] Create booking request: {}", request);
 
@@ -63,7 +64,7 @@ public class BookingServiceImpl implements BookingService {
                 .orElseThrow(() -> new NotFoundException("Showtime not found: " + request.getShowtimeId()));
         validateShowTime(showtime);
 
-        // 2. Check seats held by user
+        // 2. Check seats held by user in Redis
         seatClient.assertHeldByUser(request.getShowtimeId(), request.getSeatIds(), userId);
 
         // 3. Get seat info for price calculation
@@ -83,10 +84,20 @@ public class BookingServiceImpl implements BookingService {
             // 5. Re-verify holds under lock
             seatClient.assertHeldByUser(request.getShowtimeId(), request.getSeatIds(), userId);
 
-            // 6. Tính tổng tiền trước
+            // 6. Double check DB to ensure no race condition with other confirmed bookings
+            List<Long> bookedSeats = bookingSeatRepository.findBookedSeatIds(
+                    request.getShowtimeId(),
+                    List.of(BookingStatus.PENDING_PAYMENT, BookingStatus.CONFIRMED),
+                    request.getSeatIds()
+            );
+            if (!bookedSeats.isEmpty()) {
+                throw new ConflictException("Ghế %s đã được đặt bởi người khác.".formatted(bookedSeats));
+            }
+
+            // 7. Tính tổng tiền trước
             BigDecimal totalPrice = calculateTotalPrice(seatInfos, showtime);
 
-            // 7. Tạo booking pending trước khi validate voucher
+            // 8. Tạo booking pending trước khi validate voucher
             Booking booking = Booking.builder()
                     .account(currentUser.getAccount())
                     .showtime(showtime)
@@ -96,27 +107,22 @@ public class BookingServiceImpl implements BookingService {
                     .build();
             bookingRepository.save(booking);
 
-            // 8. Xử lý voucher nếu có
+            // 9. Xử lý voucher nếu có
             Voucher voucher = null;
             BigDecimal discount = BigDecimal.ZERO;
 
-            // Chỉ xử lý nếu voucherId được cung cấp và không rỗng
             String voucherIdStr = request.getVoucherId();
-            if(voucherIdStr != null ){
-                voucherIdStr = voucherIdStr.trim();
-            }
-            if (request.getVoucherId() != null && !request.getVoucherId().isEmpty()) {
+            if (voucherIdStr != null && !voucherIdStr.trim().isEmpty()) {
                 Long voucherId;
                 try {
-                    voucherId = Long.parseLong(request.getVoucherId());
+                    voucherId = Long.parseLong(voucherIdStr.trim());
                 } catch (NumberFormatException e) {
-                    throw new BadRequestException("Voucher ID must be a number: " + request.getVoucherId());
+                    throw new BadRequestException("Voucher ID must be a number: " + voucherIdStr);
                 }
 
                 voucher = voucherRepository.findById(voucherId)
                         .orElseThrow(() -> new NotFoundException("Voucher not found: " + voucherId));
 
-                // Tạo ValidateVoucherRequest với bookingAmount = tổng tiền trước khi giảm
                 ValidateVoucherRequest validateRequest = ValidateVoucherRequest.builder()
                         .voucherCode(voucher.getCode())
                         .bookingId(booking.getId())
@@ -126,20 +132,17 @@ public class BookingServiceImpl implements BookingService {
                 var validationResult = voucherService.validateVoucher(validateRequest, userId);
                 discount = validationResult.getDiscountAmount() != null ? validationResult.getDiscountAmount() : BigDecimal.ZERO;
 
-                // Áp dụng voucher cho booking
                 booking.setVoucher(voucher);
                 booking.setDiscountAmount(discount);
                 booking.setFinalAmount(totalPrice.subtract(discount).max(BigDecimal.ZERO));
-
             } else {
                 booking.setDiscountAmount(BigDecimal.ZERO);
                 booking.setFinalAmount(totalPrice.setScale(2, RoundingMode.HALF_UP));
             }
 
-// Lưu booking sau khi áp dụng voucher/không có voucher
             bookingRepository.save(booking);
 
-            // 9. Tạo bookingSeats
+            // 10. Tạo bookingSeats
             Map<Long, Seat> seatMap = seatRepository.findAllById(
                     seatInfos.stream().map(SeatInfo::getSeatId).toList()
             ).stream().collect(Collectors.toMap(Seat::getId, Function.identity()));
@@ -162,9 +165,6 @@ public class BookingServiceImpl implements BookingService {
             }
             bookingSeatRepository.saveAll(bookingSeats);
             booking.setBookingSeats(bookingSeats);
-
-            // 10. Consume Redis hold
-            seatClient.consumeHoldToBooked(request.getShowtimeId(), request.getSeatIds());
 
             log.info("[BOOKING] Successfully created booking ID {} for user {}", booking.getId(), userId);
 
