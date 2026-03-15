@@ -43,14 +43,23 @@ public class VnPayServiceImpl implements VnPayService {
                 .format(java.time.LocalDateTime.now());
         vnp.put("vnp_CreateDate", now);
 
-        // Ký dữ liệu
-        Map<String, String> toSign = new HashMap<>(vnp);
-        toSign.remove("vnp_Url");
-        String hash = VnPayHelper.secureHash(props.getHashSecret(), toSign);
-        toSign.put("vnp_SecureHash", hash);
+        // Ký dữ liệu (Hash trên Raw Data)
+        String hash = VnPayHelper.secureHash(props.getHashSecret(), vnp);
+        vnp.put("vnp_SecureHash", hash);
 
-        String query = VnPayHelper.buildQuery(toSign);
-        return props.getPayUrl() + "?" + query;
+        // Tạo Query String (Encode dữ liệu cho URL)
+        String query = VnPayHelper.buildQuery(vnp, true);
+        String baseUrl = props.getPayUrl();
+        
+        // Dùng UriComponentsBuilder để build URL an toàn (tự xử lý dấu ?)
+        String finalUrl = org.springframework.web.util.UriComponentsBuilder
+                .fromHttpUrl(baseUrl)
+                .query(query)
+                .build()
+                .toUriString();
+        
+        log.info("!!! VNPAY SUCCESS !!! Final Payment URL: {}", finalUrl);
+        return finalUrl;
     }
 
     /**

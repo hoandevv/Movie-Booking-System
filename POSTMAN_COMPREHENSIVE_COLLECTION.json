@@ -1,0 +1,298 @@
+{
+	"info": {
+		"_postman_id": "movie-booking-full-v2",
+		"name": "Movie Booking System - COMPREHENSIVE",
+		"description": "Bản Full Test 100% API cho Movie Booking System.\n- Tự động hóa Auth Token\n- Đầy đủ Admin & User API\n- Đầy đủ DTO JSON Body",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "01. Auth & OTP",
+			"item": [
+				{
+					"name": "Register User",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"tester001\",\n  \"email\": \"tester001@gmail.com\",\n  \"password\": \"Password123@\",\n  \"firstName\": \"Nguyen\",\n  \"lastName\": \"Van A\",\n  \"phoneNumber\": \"0912345678\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": { "raw": "{{base_url}}/api/v1/auth/register" }
+					}
+				},
+				{
+					"name": "Send OTP (Resend)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"tester001@gmail.com\",\n  \"type\": \"REGISTER\" \n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": { "raw": "{{base_url}}/api/v1/otp/send" }
+					}
+				},
+				{
+					"name": "Activate Account (Verify OTP)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"tester001@gmail.com\",\n  \"otp\": \"123456\",\n  \"type\": \"REGISTER\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": { "raw": "{{base_url}}/api/v1/auth/activate" }
+					}
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.data && jsonData.data.accessToken) {",
+									"    pm.collectionVariables.set(\"token\", jsonData.data.accessToken);",
+									"    pm.collectionVariables.set(\"refreshToken\", jsonData.data.refreshToken);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"tester001\",\n  \"password\": \"Password123@\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": { "raw": "{{base_url}}/api/v1/auth/login" }
+					}
+				},
+				{
+					"name": "Refresh Token",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": { "raw": "{{base_url}}/api/v1/auth/refresh-token" }
+					}
+				},
+				{
+					"name": "Forgot Password",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"tester001@gmail.com\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": { "raw": "{{base_url}}/api/v1/auth/forgot-password" }
+					}
+				}
+			]
+		},
+		{
+			"name": "02. Admin - User Management",
+			"item": [
+				{
+					"name": "Create User (Staff/User)",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+						"method": "POST",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"staff_new\",\n  \"email\": \"staff@movie.com\",\n  \"password\": \"Admin123@\",\n  \"firstName\": \"Staff\",\n  \"lastName\": \"User\",\n  \"phoneNumber\": \"0988776655\",\n  \"isStaff\": true\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": { "raw": "{{base_url}}/api/admin/users" }
+					}
+				},
+				{
+					"name": "Get All Users",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+						"method": "GET",
+						"url": { "raw": "{{base_url}}/api/admin/users?page=0&size=10" }
+					}
+				},
+				{
+					"name": "Lock User",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+						"method": "PUT",
+						"url": { "raw": "{{base_url}}/api/admin/users/1/lock" }
+					}
+				}
+			]
+		},
+		{
+			"name": "03. Movies Management",
+			"item": [
+				{
+					"name": "Create Movie",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+						"method": "POST",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Dune: Part Two\",\n  \"description\": \"Epic sci-fi movie\",\n  \"duration\": 166,\n  \"releaseDate\": \"2024-03-01\",\n  \"screeningStartDate\": \"2024-03-01\",\n  \"screeningEndDate\": \"2024-04-01\",\n  \"status\": \"COMING_SOON\",\n  \"genre\": \"Sci-Fi\",\n  \"language\": \"English\",\n  \"rating\": 9.0\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": { "raw": "{{base_url}}/api/v1/movies" }
+					}
+				},
+				{
+					"name": "Search Movies",
+					"request": {
+						"method": "GET",
+						"url": { "raw": "{{base_url}}/api/v1/movies/search?keyword=Dune&page=0&size=10" }
+					}
+				}
+			]
+		},
+		{
+			"name": "04. Theater & Screen & Seat",
+			"item": [
+				{
+					"name": "Create Theater",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+						"method": "POST",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"CGV Vincom Hung Vuong\",\n  \"address\": \"Can Tho City\",\n  \"phoneNumber\": \"02923123456\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": { "raw": "{{base_url}}/api/v1/theaters" }
+					}
+				},
+				{
+					"name": "Generate Seats for Screen",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+						"method": "POST",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"numberOfRows\": 10,\n  \"seatsPerRow\": 12,\n  \"seatType\": \"NORMAL\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": { "raw": "{{base_url}}/api/v1/seats/generate/1" }
+					}
+				}
+			]
+		},
+		{
+			"name": "05. Showtimes",
+			"item": [
+				{
+					"name": "Create Showtime",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+						"method": "POST",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"movieId\": 1,\n  \"screenId\": 1,\n  \"showDate\": \"2025-11-11\",\n  \"startTime\": \"19:00:00\",\n  \"endTime\": \"21:46:00\",\n  \"price\": 95000\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": { "raw": "{{base_url}}/api/v1/showtimes" }
+					}
+				},
+				{
+					"name": "Get Showtimes (Filter)",
+					"request": {
+						"method": "GET",
+						"url": { "raw": "{{base_url}}/api/v1/showtimes?theaterId=1&movieId=1&date=2025-11-11" }
+					}
+				}
+			]
+		},
+		{
+			"name": "06. Booking & Payment",
+			"item": [
+				{
+					"name": "Hold Seats (Lock)",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+						"method": "POST",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"showtimeId\": 1,\n  \"seatIds\": [10, 11, 12],\n  \"ttlSec\": 120\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": { "raw": "{{base_url}}/api/v1/seat-holds" }
+					}
+				},
+				{
+					"name": "Create Booking",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+						"method": "POST",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"showtimeId\": 1,\n  \"seatIds\": [10, 11, 12],\n  \"voucherId\": \"GIAM10\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": { "raw": "{{base_url}}/api/v1/bookings" }
+					}
+				},
+				{
+					"name": "Create VNPay Payment",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+						"method": "POST",
+						"url": { "raw": "{{base_url}}/api/v1/payments/bookings/1/payment" }
+					}
+				}
+			]
+		},
+		{
+			"name": "07. Voucher System",
+			"item": [
+				{
+					"name": "Create Voucher (Admin)",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+						"method": "POST",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"code\": \"WELCOME2025\",\n  \"name\": \"Khuyen mai xuan 2025\",\n  \"discountType\": \"PERCENTAGE\",\n  \"discountValue\": 20,\n  \"minOrderAmount\": 100000,\n  \"maxDiscountAmount\": 50000,\n  \"totalUsageLimit\": 1000,\n  \"usagePerUser\": 1,\n  \"validFrom\": \"2025-01-01T00:00:00\",\n  \"validUntil\": \"2025-12-31T23:59:59\",\n  \"status\": \"ACTIVE\",\n  \"isPublic\": true\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": { "raw": "{{base_url}}/api/v1/vouchers" }
+					}
+				},
+				{
+					"name": "Validate Voucher (User)",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+						"method": "POST",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"voucherCode\": \"WELCOME2025\",\n  \"totalAmount\": 200000\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": { "raw": "{{base_url}}/api/v1/vouchers/validate" }
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{ "key": "base_url", "value": "http://localhost:8080", "type": "string" },
+		{ "key": "token", "value": "", "type": "string" },
+		{ "key": "refreshToken", "value": "", "type": "string" }
+	]
+}

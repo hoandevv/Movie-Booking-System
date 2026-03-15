@@ -5,6 +5,7 @@ import com.trainning.movie_booking_system.entity.Seat;
 import com.trainning.movie_booking_system.exception.BadRequestException;
 import com.trainning.movie_booking_system.exception.ConflictException;
 import com.trainning.movie_booking_system.exception.NotFoundException;
+import com.trainning.movie_booking_system.repository.BookingSeatRepository;
 import com.trainning.movie_booking_system.repository.SeatRepository;
 import com.trainning.movie_booking_system.utils.enums.SeatStatus;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ public class SeatDomainService {
     private final StringRedisTemplate redis;
     private final SeatRepository seatRepository;
     private final ShowtimeRepository showtimeRepository;
+    private final BookingSeatRepository bookingSeatRepository;
 
     private String holdKey(Long showtimeId, Long seatId) {
         return "hold:%d:%d".formatted(showtimeId, seatId);
@@ -46,109 +48,101 @@ public class SeatDomainService {
             throw new BadRequestException("Cannot hold seat. Showtime %s has already started.".formatted(showtimeStart));
         }
 
-        LocalDateTime cutoffTime = showtimeStart.minusMinutes(15); // hoặc thời gian cutoff bạn muốn
+        LocalDateTime cutoffTime = showtimeStart.minusMinutes(15); 
         if (now.isAfter(cutoffTime)) {
             throw new BadRequestException("Cannot hold seat. Booking closes 15 minutes before showtime. Cutoff: %s".formatted(cutoffTime));
         }
     }
 
     /**
-     * Hold seats ATOMIC - rollback nếu fail
+     * Hold seats ATOMIC using Redis. 
+     * Availability is checked against the specific showtime in DB and Redis.
      */
     public void holdSeats(Long showtimeId, List<Long> seatIds, Long userId, Duration ttl) {
         validateShowtime(showtimeId);
         log.info("[SEAT-HOLD] User {} attempting to hold seats {} for showtime {}", userId, seatIds, showtimeId);
 
+        // 1. Check if seats are already booked for this showtime in DB
+        List<Long> bookedInDb = bookingSeatRepository.findBookedSeatIds(
+                showtimeId, 
+                List.of(com.trainning.movie_booking_system.utils.enums.BookingStatus.PENDING_PAYMENT, 
+                        com.trainning.movie_booking_system.utils.enums.BookingStatus.CONFIRMED), 
+                seatIds);
+        
+        if (!bookedInDb.isEmpty()) {
+            throw new ConflictException("Ghế %s đã được đặt hoặc đang trong quá trình thanh toán.".formatted(bookedInDb));
+        }
+
         List<Long> heldSeats = new ArrayList<>();
         try {
             for (Long seatId : seatIds) {
+                // Check physical availability (e.g. not under maintenance)
                 Seat seat = seatRepository.findById(seatId)
                         .orElseThrow(() -> new NotFoundException("Seat not found: " + seatId));
 
-                if (seat.getStatus() != SeatStatus.AVAILABLE) {
-                    throw new ConflictException("Ghế %d hiện không khả dụng: %s".formatted(seatId, seat.getStatus()));
+                if (seat.getStatus() == SeatStatus.MAINTENANCE) {
+                    throw new ConflictException("Ghế %d hiện đang bảo trì.".formatted(seatId));
                 }
 
                 String key = holdKey(showtimeId, seatId);
                 String userIdStr = String.valueOf(userId);
 
+                // Atomic check-and-set in Redis
                 Boolean success = redis.opsForValue().setIfAbsent(key, userIdStr, ttl);
                 if (Boolean.TRUE.equals(success)) {
-                    // Cập nhật DB sang OCCUPIED
-                    seat.setStatus(SeatStatus.OCCUPIED);
-                    seatRepository.save(seat);
                     heldSeats.add(seatId);
-                    log.debug("[SEAT-HOLD] Seat {} held successfully", seatId);
+                    log.debug("[SEAT-HOLD] Seat {} held in Redis", seatId);
                 } else {
                     String currentOwner = redis.opsForValue().get(key);
                     if (userIdStr.equals(currentOwner)) {
                         redis.expire(key, ttl);
                         heldSeats.add(seatId);
-                        log.debug("[SEAT-HOLD] Seat {} already held by same user, TTL refreshed", seatId);
+                        log.debug("[SEAT-HOLD] Seat {} hold refreshed in Redis", seatId);
                     } else {
-                        throw new ConflictException("Ghế %d đang được giữ bởi người khác.".formatted(seatId));
+                        throw new ConflictException("Ghế %d đang được người khác giữ.".formatted(seatId));
                     }
                 }
             }
-            log.info("[SEAT-HOLD] Successfully held {} seats for user {}", heldSeats.size(), userId);
+            log.info("[SEAT-HOLD] Successfully held {} seats in Redis for user {}", heldSeats.size(), userId);
         } catch (Exception e) {
-            log.error("[SEAT-HOLD] Failed to hold seats, rolling back {} seats", heldSeats.size());
-            // Rollback Redis và DB
-            heldSeats.forEach(seatId -> {
-                redis.delete(holdKey(showtimeId, seatId));
-                Seat seat = seatRepository.findById(seatId).orElse(null);
-                if (seat != null && seat.getStatus() == SeatStatus.OCCUPIED) {
-                    seat.setStatus(SeatStatus.AVAILABLE);
-                    seatRepository.save(seat);
-                }
-            });
+            log.error("[SEAT-HOLD] Failed to hold seats in Redis, rolling back", e);
+            heldSeats.forEach(seatId -> redis.delete(holdKey(showtimeId, seatId)));
             throw e;
         }
     }
 
     /**
-     * Release held seats (cancel/timeout)
+     * Release Redis holds
      */
     public void releaseHolds(Long showtimeId, List<Long> seatIds) {
-        log.info("[SEAT-HOLD] Releasing hold for {} seats", seatIds.size());
+        log.info("[SEAT-HOLD] Releasing Redis hold for {} seats", seatIds.size());
         seatIds.forEach(id -> {
             redis.delete(holdKey(showtimeId, id));
-            Seat seat = seatRepository.findById(id)
-                    .orElseThrow(() -> new NotFoundException("Seat not found: " + id));
-            if (seat.getStatus() == SeatStatus.OCCUPIED) {
-                seat.setStatus(SeatStatus.AVAILABLE);
-                seatRepository.save(seat);
-            }
-            log.debug("[SEAT-HOLD] Released hold for seat {}", id);
+            log.debug("[SEAT-HOLD] Released Redis hold for seat {}", id);
         });
     }
 
     /**
-     * Verify seats held bởi user
+     * Verify seats held by user in Redis
      */
     public void assertHeldByUser(Long showtimeId, List<Long> seatIds, Long userId) {
         for (Long seatId : seatIds) {
             String key = holdKey(showtimeId, seatId);
             String owner = redis.opsForValue().get(key);
             if (owner == null)
-                throw new ConflictException("Ghế %d không còn được giữ.".formatted(seatId));
+                throw new ConflictException("Ghế %d không còn được giữ (timeout).".formatted(seatId));
             if (!owner.equals(String.valueOf(userId)))
-                throw new ConflictException("Ghế %d đang được giữ bởi người khác.".formatted(seatId));
+                throw new ConflictException("Ghế %d đang được người khác giữ.".formatted(seatId));
         }
     }
 
     /**
-     * Sau booking thành công: xoá hold và cập nhật trạng thái BOOKED
+     * Clear Redis hold after successful booking creation (or payment)
      */
     public void consumeHoldToBooked(Long showtimeId, List<Long> seatIds) {
-        log.info("[SEAT-HOLD] Booking confirmed for {} seats", seatIds.size());
+        log.info("[SEAT-HOLD] Clearing Redis hold for {} booked seats", seatIds.size());
         seatIds.forEach(id -> {
             redis.delete(holdKey(showtimeId, id));
-            Seat seat = seatRepository.findById(id)
-                    .orElseThrow(() -> new NotFoundException("Seat not found: " + id));
-            seat.setStatus(SeatStatus.BOOKED);
-            seatRepository.save(seat);
-            log.debug("[SEAT-HOLD] Seat {} marked as BOOKED", id);
         });
     }
 
